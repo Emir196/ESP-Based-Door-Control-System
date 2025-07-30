@@ -168,9 +168,6 @@ This project implements a smart door control system using the **ESP32** microcon
 3. Select your ESP32 board and port
 4. Upload the code to your ESP32
 
-### Circuit Diagram
-*(Add your circuit schematic here - Fritzing diagram recommended)*
-
 ## 📖 Usage
 
 ### System Startup
