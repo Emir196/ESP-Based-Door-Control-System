@@ -1,0 +1,410 @@
+# 🚪 ESP32 Door Control System
+
+An intelligent door automation system built with ESP32 microcontroller, featuring LCD display interface, LED status indicators, push-button controls, and DC motor-driven door mechanism with serial monitoring capabilities.
+
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Hardware Components](#hardware-components)
+- [System Architecture](#system-architecture)
+- [Installation & Setup](#installation--setup)
+- [Usage](#usage)
+- [Pin Configuration](#pin-configuration)
+- [Control Interface](#control-interface)
+- [Code Structure](#code-structure)
+- [Troubleshooting](#troubleshooting)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
+- [License](#license)
+
+## 🎯 Overview
+
+This project implements a smart door control system using the **ESP32** microcontroller. The system provides automated door operation through push-button interface, visual feedback via LCD display and LED indicators, and real-time status monitoring through serial communication. Perfect for home automation, security applications, or educational IoT projects.
+
+### Key Capabilities:
+- **Automated door control**: Open/close operations with DC motor
+- **Visual feedback**: 16x2 LCD display with real-time status
+- **LED indicators**: 4-channel LED status display
+- **Push-button interface**: Manual door control
+- **Serial monitoring**: Real-time status logging
+- **Safety features**: Controlled motor operation with timing
+
+## ✨ Features
+
+### 🔧 Door Control System
+- **DC Motor Control**: H-bridge driver for bidirectional motor control
+- **Variable Speed**: PWM control with adjustable motor speed (0-255)
+- **Timed Operations**: Automatic motor stop after operation completion
+- **Direction Control**: Forward (open) and reverse (close) operations
+
+### 🖥️ User Interface
+- **16x2 LCD Display**: Real-time status and welcome messages
+- **4 LED Indicators**: Visual feedback for system status
+- **Push-button Controls**: 
+  - Button 1 (Pin 38): Door open command
+  - Button 2 (Pin 39): Door close command
+- **Status LED**: System power/ready indicator
+
+### 📡 Communication
+- **Serial Monitor**: 9600 baud rate for debugging and status logging
+- **Real-time Logging**: Door operation status and system events
+- **Debug Interface**: Easy troubleshooting and monitoring
+
+### 🎨 Visual Effects
+- **LED Animation**: Sequential blinking pattern on startup
+- **Dynamic Display**: LCD updates with operation status
+- **Status Indicators**: Clear visual feedback for all operations
+
+## 🛠️ Hardware Components
+
+### Microcontroller
+- **ESP32 Development Board**: Dual-core processor with WiFi/Bluetooth
+- **Operating Voltage**: 3.3V logic, 5V power supply
+- **GPIO Pins**: Multiple digital I/O for sensors and actuators
+
+### Display & Interface
+| Component | Pin(s) | Function | Specifications |
+|-----------|--------|----------|----------------|
+| LCD 16x2 | 36,35,37,26,27,28,29 | Status display | HD44780 compatible |
+| LEDs (4x) | 43,44,45,46 | Status indicators | Standard 5mm LEDs |
+| Buttons (2x) | 38,39 | Manual control | Momentary push buttons |
+| Control LED | 31 | System ready | Power indicator |
+
+### Motor Control
+| Component | Pin | Function | Specifications |
+|-----------|-----|----------|----------------|
+| Motor Driver | 8,9,10 | H-bridge control | L298N compatible |
+| motorPin1 | 8 | Direction control 1 | Digital output |
+| motorPin2 | 9 | Direction control 2 | Digital output |
+| enablePin | 10 | PWM speed control | Analog output (0-255) |
+
+### Additional Components Needed
+- **DC Motor**: 6V-12V geared motor for door mechanism
+- **Power Supply**: 12V/2A for motor, 5V for ESP32
+- **Pull-up Resistors**: 10kΩ for button inputs
+- **Connecting Wires**: Breadboard or PCB connections
+- **Motor Driver Module**: L298N or similar H-bridge
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Input         │───▶│     ESP32        │───▶│   Output        │
+│                 │    │   Controller     │    │                 │
+│ • Push Buttons  │    │                  │    │ • DC Motor      │
+│   - Open (38)   │    │ • GPIO Control   │    │ • LCD Display   │
+│   - Close (39)  │    │ • PWM Output     │    │ • LED Array     │
+│                 │    │ • Serial Comm    │    │ • Status LED    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │   Serial Monitor │
+                    │   (9600 baud)    │
+                    └──────────────────┘
+```
+
+## 🚀 Installation & Setup
+
+### Prerequisites
+- **Arduino IDE** (version 1.8.x or newer)
+- **ESP32 Board Package** for Arduino IDE
+- **LiquidCrystal Library** (usually pre-installed)
+- **USB Cable** (USB-C or Micro-USB depending on ESP32 board)
+
+### Arduino IDE Setup
+1. **Install ESP32 Board Package**:
+   - Go to File → Preferences
+   - Add this URL to Additional Board Manager URLs:
+     ```
+     https://dl.espressif.com/dl/package_esp32_index.json
+     ```
+   - Go to Tools → Board → Board Manager
+   - Search "ESP32" and install "ESP32 by Espressif Systems"
+
+2. **Select Board and Port**:
+   - Tools → Board → ESP32 Arduino → ESP32 Dev Module
+   - Tools → Port → Select your ESP32 port
+
+### Hardware Setup
+1. **Power Connections**:
+   ```
+   ESP32 VIN  → 5V Power Supply
+   ESP32 GND  → Ground (common)
+   ```
+
+2. **LCD Connections** (16x2 with I2C or parallel):
+   ```
+   LCD RS  → GPIO 36    LCD D4 → GPIO 26
+   LCD EN  → GPIO 35    LCD D5 → GPIO 27  
+   LCD D0  → Not used   LCD D6 → GPIO 28
+   LCD RW  → Ground     LCD D7 → GPIO 29
+   LCD VSS → Ground     LCD A  → 5V
+   LCD VDD → 5V         LCD K  → Ground
+   LCD V0  → Potentiometer (contrast)
+   ```
+
+3. **Motor Driver Connections**:
+   ```
+   L298N IN1 → GPIO 8     Motor A → Door Motor +
+   L298N IN2 → GPIO 9     Motor B → Door Motor -
+   L298N ENA → GPIO 10    VCC → 12V Power
+   L298N GND → Ground     GND → Ground
+   ```
+
+4. **Button and LED Connections**:
+   ```
+   Buttons: GPIO 38,39 (with 10kΩ pull-down resistors)
+   LEDs: GPIO 43,44,45,46 (with 220Ω current limiting resistors)
+   Status LED: GPIO 31 (with 220Ω resistor)
+   ```
+
+### Software Installation
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/Emir196/esp32-door-control-system.git
+   ```
+2. Open `door_control_system.ino` in Arduino IDE
+3. Select your ESP32 board and port
+4. Upload the code to your ESP32
+
+### Circuit Diagram
+*(Add your circuit schematic here - Fritzing diagram recommended)*
+
+## 📖 Usage
+
+### System Startup
+1. Power on the ESP32 system
+2. Open Serial Monitor (9600 baud) in Arduino IDE
+3. System displays welcome message on LCD
+4. LEDs perform startup animation sequence
+5. System ready for operation
+
+### Normal Operation
+
+#### Door Control
+- **Open Door**: Press button connected to GPIO 38
+  - Motor rotates forward for 1 second
+  - All LEDs turn ON
+  - LCD displays "Door is open"
+  - Serial output: "Door is open"
+
+- **Close Door**: Press button connected to GPIO 39
+  - Motor rotates reverse for 1 second
+  - All LEDs turn OFF
+  - LCD displays "Door is closed"
+  - Serial output: "Door is closed"
+  - Motor automatically stops
+
+#### LED Status Indicators
+- **Startup**: Sequential blinking animation
+- **Door Open**: All 4 LEDs ON
+- **Door Closed**: All 4 LEDs OFF
+- **System Ready**: Control LED always ON
+
+#### LCD Display Messages
+- **Welcome Screen**: "You are Welcome" / "Press the Button"
+- **Door Opening**: "Door is open"
+- **Door Closing**: "Door is closed"
+
+## 📌 Pin Configuration
+
+### Digital I/O Pins
+```cpp
+// LCD Display Pins
+const int LCD_RS = 36;
+const int LCD_EN = 35;
+const int LCD_D4 = 37;
+const int LCD_DATA[] = {26, 27, 28, 29};
+
+// LED Array Pins
+const int Leds[] = {43, 44, 45, 46};
+
+// Button Input Pins
+const int Buttons[] = {38, 39};
+
+// Motor Control Pins
+const int motorPin1 = 8;   // Direction 1
+const int motorPin2 = 9;   // Direction 2
+const int enablePin = 10;  // PWM Speed
+
+// Status Indicator
+const int control_led = 31;
+```
+
+### PWM Configuration
+- **Motor Speed**: Analog write value 0-255 (0-100% duty cycle)
+- **Default Speed**: 255 (maximum speed)
+- **PWM Frequency**: ESP32 default (1 kHz)
+
+## 🎮 Control Interface
+
+### Physical Controls
+| Button | GPIO | Function | Action |
+|--------|------|----------|--------|
+| Open | 38 | Door open | Motor forward + LEDs ON |
+| Close | 39 | Door close | Motor reverse + LEDs OFF |
+
+### Serial Commands
+Monitor the system via Serial Monitor:
+```
+Welcome screen
+Door is open
+Door is closed
+```
+
+### Button Debouncing
+The system implements software debouncing:
+```cpp
+delay(50);                    // Pre-debounce delay
+while (digitalRead(pin) == 1); // Wait for release
+delay(50);                    // Post-debounce delay
+```
+
+## 📁 Code Structure
+
+### Main Functions
+
+#### Setup Function
+```cpp
+void setup()
+```
+- Initializes serial communication (9600 baud)
+- Configures GPIO pins (INPUT/OUTPUT)
+- Sets up LCD display
+- Displays welcome screen
+- Performs LED startup animation
+
+#### Main Loop
+```cpp
+void loop()
+```
+- Continuously calls `test()` function
+- Monitors button states
+- Handles door control operations
+
+#### Core Functions
+
+**Button Monitoring**
+```cpp
+void test()
+```
+- Monitors GPIO 38 and 39 for button presses
+- Implements debouncing mechanism
+- Calls appropriate door control functions
+
+**Door Operations**
+```cpp
+void open_door()    // Opens door with motor and LEDs
+void close_door()   // Closes door and stops motor
+```
+
+**Display Functions**
+```cpp
+void main_screen()  // Shows welcome message
+void blinkLEDs()    // Startup animation
+```
+
+### Program Flow
+```
+Power On → Setup → Main Screen → Button Monitor → Door Control → Status Update → Repeat
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**LCD Not Displaying**
+- Check wiring connections (especially power and ground)
+- Verify contrast adjustment (V0 pin with potentiometer)
+- Test with simple LCD example code
+- Ensure 5V power supply for LCD
+
+**Motor Not Working**
+- Verify H-bridge connections and power supply
+- Check motor driver enable pin (GPIO 10)
+- Test motor directly with 12V power
+- Confirm ground connections between ESP32 and motor driver
+
+**Buttons Not Responding**
+- Check pull-down resistor connections (10kΩ to ground)
+- Verify button wiring and GPIO pin assignments
+- Test with multimeter for button continuity
+- Check debouncing delays
+
+**LEDs Not Working**
+- Verify current limiting resistors (220Ω recommended)
+- Check GPIO pin assignments match code
+- Test LEDs individually with multimeter
+- Confirm ESP32 GPIO output voltage (3.3V)
+
+**Serial Monitor Issues**
+- Verify correct baud rate (9600)
+- Check USB cable and port selection
+- Ensure ESP32 is properly connected
+- Try different USB port or cable
+
+### Diagnostic Steps
+1. **Power Test**: Verify all power connections and voltages
+2. **GPIO Test**: Use simple blink example to test pins
+3. **Component Test**: Test each component individually
+4. **Serial Debug**: Add debug prints to isolate issues
+
+## 🔮 Future Improvements
+
+### Planned Features
+- [ ] **WiFi Integration**: Remote control via web interface
+- [ ] **Mobile App**: Android/iOS control application
+- [ ] **Sensor Integration**: Door position sensors for feedback
+- [ ] **Security Features**: Password protection and access logging
+- [ ] **Time Scheduling**: Automatic door operations
+- [ ] **Status Notifications**: Email/SMS alerts for door events
+
+### Hardware Upgrades
+- [ ] **Stepper Motor**: More precise door positioning
+- [ ] **Limit Switches**: Automatic stop at open/close positions
+- [ ] **RFID Reader**: Card-based access control
+- [ ] **Camera Module**: Security monitoring integration
+- [ ] **Battery Backup**: UPS for power outage protection
+
+### Software Enhancements
+- [ ] **OTA Updates**: Over-the-air firmware updates
+- [ ] **Data Logging**: Operation history with timestamps
+- [ ] **Error Handling**: Comprehensive error detection and recovery
+- [ ] **Multiple Door Support**: Control multiple doors
+- [ ] **Voice Control**: Integration with Alexa/Google Assistant
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Guidelines
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Code Style
+- Use clear, descriptive variable names
+- Comment complex operations
+- Follow Arduino IDE conventions
+- Test on hardware before submitting
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**Emir Kaan Demirdaş**
+- 📧 Email: demirdasemirkaan@gmail.com
+- 💼 LinkedIn: [emir-kaan-demirdas](https://www.linkedin.com/in/emir-kaan-demirdas/)
+
+---
+
+⭐ If this project helped you, please give it a star!
+
+---
+
+*Built with ❤️ for home automation and IoT innovation*
